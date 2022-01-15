@@ -19,15 +19,26 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm run test
+
   lint:
     runs-on: ubuntu-latest
-    name: 'Linting'
+    name: 'Lint: node-16, ubuntu-latest'
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
         with:
-          node-version: '16'
+          fetch-depth: 0
+
+      - name: Set node version to 16
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
           cache: 'npm'
-      - run: npm ci
-      - run: npm run build
-      - run: npm run lint
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Lint
+        run: npm run lint
