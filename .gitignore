@@ -88,3 +88,7 @@ REVISION
 /lib/*
 !/lib/locales.js
 !/lib/locales
+
+# Invalid project lock files
+package-lock.json
+yarn.lock
