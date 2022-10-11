@@ -1,152 +1,125 @@
-import type { JestMockCompat } from 'vitest';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { faker } from '../dist/cjs';
+import validator from 'validator';
+import { afterEach, describe, expect, it } from 'vitest';
+import { faker } from '../src';
+import { seededTests } from './support/seededRuns';
 
-describe('git.js', () => {
-  describe('branch()', () => {
-    let spy_hacker_noun: JestMockCompat<[], string>;
-    let spy_hacker_verb: JestMockCompat<[], string>;
+const NON_SEEDED_BASED_RUN = 5;
 
-    beforeEach(() => {
-      spy_hacker_noun = vi.spyOn(faker.hacker, 'noun');
-      spy_hacker_verb = vi.spyOn(faker.hacker, 'verb');
-    });
-
-    afterEach(() => {
-      spy_hacker_noun.mockRestore();
-      spy_hacker_verb.mockRestore();
-    });
-
-    it('returns a branch with hacker noun and verb', () => {
-      faker.git.branch();
-
-      expect(spy_hacker_noun).toHaveBeenCalledOnce();
-      expect(spy_hacker_verb).toHaveBeenCalledOnce();
-    });
+describe('git', () => {
+  afterEach(() => {
+    faker.locale = 'en';
   });
 
-  describe('commitEntry()', () => {
-    let spy_git_commitMessage: JestMockCompat<[], string>;
-    let spy_git_commitSha: JestMockCompat<[], string>;
-    let spy_internet_email: JestMockCompat<
-      [firstName?: string, lastName?: string, provider?: string],
-      string
-    >;
-    let spy_name_firstName: JestMockCompat<[gender?: string | number], string>;
-    let spy_name_lastName: JestMockCompat<[gender?: string | number], string>;
-    let spy_datatype_number: JestMockCompat<
-      [
-        options?:
-          | number
-          | {
-              min?: number;
-              max?: number;
-              precision?: number;
-            }
-      ],
-      number
-    >;
+  seededTests(faker, 'git', (t) => {
+    t.itEach('branch', 'commitMessage', 'commitSha', 'shortSha');
 
-    beforeEach(() => {
-      spy_git_commitMessage = vi.spyOn(faker.git, 'commitMessage');
-      spy_git_commitSha = vi.spyOn(faker.git, 'commitSha');
-      spy_internet_email = vi.spyOn(faker.internet, 'email');
-      spy_name_firstName = vi.spyOn(faker.name, 'firstName');
-      spy_name_lastName = vi.spyOn(faker.name, 'lastName');
-      spy_datatype_number = vi.spyOn(faker.datatype, 'number');
-    });
+    // The timestamp is not fixed, so we can't compare it
+    t.todo('commitEntry');
+  });
 
-    afterEach(() => {
-      spy_git_commitMessage.mockRestore();
-      spy_git_commitSha.mockRestore();
-      spy_internet_email.mockRestore();
-      spy_name_firstName.mockRestore();
-      spy_name_lastName.mockRestore();
-      spy_datatype_number.mockRestore();
-    });
+  describe(`random seeded tests for seed ${faker.seed()}`, () => {
+    for (let i = 1; i <= NON_SEEDED_BASED_RUN; i++) {
+      describe('branch()', () => {
+        it('should return a random branch', () => {
+          const branch = faker.git.branch();
 
-    it('returns merge entry at random', () => {
-      faker.git.commitEntry();
-
-      expect(spy_datatype_number).toHaveBeenCalled();
-    });
-
-    it('returns a commit entry with git commit message and sha', () => {
-      faker.git.commitEntry();
-
-      expect(spy_git_commitMessage).toHaveBeenCalledOnce();
-      expect(spy_git_commitSha).toHaveBeenCalledOnce();
-    });
-
-    it('returns a commit entry with internet email', () => {
-      faker.git.commitEntry();
-
-      expect(spy_internet_email).toHaveBeenCalledOnce();
-    });
-
-    it('returns a commit entry with name first and last', () => {
-      faker.git.commitEntry();
-
-      expect(spy_name_firstName).toHaveBeenCalledTimes(2);
-      expect(spy_name_lastName).toHaveBeenCalledTimes(2);
-    });
-
-    describe("with options['merge'] equal to true", () => {
-      let spy_git_shortSha: JestMockCompat<[], string>;
-
-      beforeEach(() => {
-        spy_git_shortSha = vi.spyOn(faker.git, 'shortSha');
+          expect(branch).toBeTruthy();
+          expect(branch).toBeTypeOf('string');
+          expect(branch).toSatisfy(validator.isSlug);
+        });
       });
 
-      afterEach(() => {
-        spy_git_shortSha.mockRestore();
+      describe('commitEntry', () => {
+        it('should return a valid random commitEntry', () => {
+          const commitEntry = faker.git.commitEntry();
+
+          expect(commitEntry).toBeTruthy();
+          expect(commitEntry).toBeTypeOf('string');
+
+          const parts = commitEntry.split(/\r?\n/);
+
+          expect(parts.length).toBeGreaterThanOrEqual(6);
+          expect(parts.length).toBeLessThanOrEqual(7);
+
+          expect(parts[0]).toMatch(/^commit [a-f0-9]+$/);
+          if (parts.length === 7) {
+            expect(parts[1]).toMatch(/^Merge: [a-f0-9]+ [a-f0-9]+$/);
+            expect(parts[2]).toMatch(/^Author: \w+ \w+ \<[\w\.]+@[\w\.]+\>$/);
+            expect(parts[3]).toMatch(/^Date: .+$/);
+            expect(parts[4]).toBe('');
+            expect(parts[5]).toMatch(/^\s{4}.+$/);
+          } else {
+            expect(parts[1]).toMatch(/^Author: \w+ \w+ \<[\w\.]+@[\w\.]+\>$/);
+            expect(parts[2]).toMatch(/^Date: .+$/);
+            expect(parts[3]).toBe('');
+            expect(parts[4]).toMatch(/^\s{4}.+$/);
+          }
+        });
+
+        it('should return a random commitEntry with a default end of line charcter of "\r\n"', () => {
+          const commitEntry = faker.git.commitEntry();
+          const parts = commitEntry.split('\r\n');
+
+          expect(parts.length).toBeGreaterThanOrEqual(6);
+          expect(parts.length).toBeLessThanOrEqual(7);
+        });
+
+        it('should return a random commitEntry with a configured end of line charcter of "\r\n" with eol = CRLF', () => {
+          const commitEntry = faker.git.commitEntry({
+            eol: 'CRLF',
+          });
+          const parts = commitEntry.split('\r\n');
+
+          expect(parts.length).toBeGreaterThanOrEqual(6);
+          expect(parts.length).toBeLessThanOrEqual(7);
+        });
+
+        it('should return a random commitEntry with a configured end of line charcter of "\n" with eol = LF', () => {
+          const commitEntry = faker.git.commitEntry({
+            eol: 'LF',
+          });
+          const parts = commitEntry.split('\n');
+
+          expect(parts.length).toBeGreaterThanOrEqual(6);
+          expect(parts.length).toBeLessThanOrEqual(7);
+
+          expect(commitEntry).not.contains('\r\n');
+        });
       });
 
-      it('returns a commit entry with merge details', () => {
-        faker.git.commitEntry({ merge: true });
+      describe('commitMessage', () => {
+        it('should return a random commitMessage', () => {
+          const commitMessage = faker.git.commitMessage();
 
-        expect(spy_git_shortSha).toHaveBeenCalledTimes(2);
+          expect(commitMessage).toBeTruthy();
+          expect(commitMessage).toBeTypeOf('string');
+
+          const parts = commitMessage.split(' ');
+          expect(parts.length).toBeGreaterThanOrEqual(3);
+        });
       });
-    });
-  });
 
-  describe('commitMessage()', () => {
-    let spy_hacker_verb: JestMockCompat<[], string>;
-    let spy_hacker_adjective: JestMockCompat<[], string>;
-    let spy_hacker_noun: JestMockCompat<[], string>;
+      describe('commitSha', () => {
+        it('should return a random commitSha', () => {
+          const commitSha = faker.git.commitSha();
 
-    beforeEach(() => {
-      spy_hacker_verb = vi.spyOn(faker.hacker, 'verb');
-      spy_hacker_adjective = vi.spyOn(faker.hacker, 'adjective');
-      spy_hacker_noun = vi.spyOn(faker.hacker, 'noun');
-    });
+          expect(commitSha).toBeTruthy();
+          expect(commitSha).toBeTypeOf('string');
+          expect(commitSha).toSatisfy(validator.isHexadecimal);
+          expect(commitSha).toHaveLength(40);
+        });
+      });
 
-    afterEach(() => {
-      spy_hacker_verb.mockRestore();
-      spy_hacker_adjective.mockRestore();
-      spy_hacker_noun.mockRestore();
-    });
+      describe('shortSha', () => {
+        it('should return a random shortSha', () => {
+          const shortSha = faker.git.shortSha();
 
-    it('returns a commit message with hacker noun, adj and verb', () => {
-      faker.git.commitMessage();
-
-      expect(spy_hacker_verb).toHaveBeenCalledOnce();
-      expect(spy_hacker_adjective).toHaveBeenCalledOnce();
-      expect(spy_hacker_noun).toHaveBeenCalledOnce();
-    });
-  });
-
-  describe('commitSha()', () => {
-    it('returns a random commit SHA', () => {
-      const commitSha = faker.git.commitSha();
-      expect(commitSha).match(/^[a-f0-9]{40}$/);
-    });
-  });
-
-  describe('shortSha()', () => {
-    it('returns a random short SHA', () => {
-      const shortSha = faker.git.shortSha();
-      expect(shortSha).match(/^[a-f0-9]{7}$/);
-    });
+          expect(shortSha).toBeTruthy();
+          expect(shortSha).toBeTypeOf('string');
+          expect(shortSha).toSatisfy(validator.isHexadecimal);
+          expect(shortSha).toHaveLength(7);
+        });
+      });
+    }
   });
 });

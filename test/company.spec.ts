@@ -1,120 +1,209 @@
-import { describe, expect, it, vi } from 'vitest';
-import { faker } from '../dist/cjs';
+import { afterEach, describe, expect, it } from 'vitest';
+import { faker } from '../src';
+import { seededTests } from './support/seededRuns';
+
+const NON_SEEDED_BASED_RUN = 5;
 
 describe('company', () => {
-  describe('companyName()', () => {
-    it('sometimes returns three last names', () => {
-      const spy_name_lastName = vi.spyOn(faker.name, 'lastName');
-      const spy_datatype_number = vi
-        .spyOn(faker.datatype, 'number')
-        .mockReturnValue(2);
+  afterEach(() => {
+    faker.locale = 'en';
+  });
 
-      const name = faker.company.companyName();
-      const parts = name.split(' ');
-
-      expect(parts.length).toBe(4); // account for word 'and'
-      expect(spy_name_lastName).toHaveBeenCalledTimes(3);
-
-      spy_datatype_number.mockRestore();
-      spy_name_lastName.mockRestore();
-    });
-
-    it('sometimes returns two last names separated by a hyphen', () => {
-      const spy_name_lastName = vi.spyOn(faker.name, 'lastName');
-      const spy_datatype_number = vi
-        .spyOn(faker.datatype, 'number')
-        .mockReturnValue(1);
-
-      const name = faker.company.companyName();
-      const parts = name.split('-');
-
-      expect(parts.length).greaterThanOrEqual(2);
-      expect(spy_name_lastName).toHaveBeenCalledTimes(2);
-
-      spy_datatype_number.mockRestore();
-      spy_name_lastName.mockRestore();
-    });
-
-    it('sometimes returns a last name with a company suffix', () => {
-      const spy_company_companySuffix = vi.spyOn(
-        faker.company,
-        'companySuffix'
-      );
-      const spy_name_lastName = vi.spyOn(faker.name, 'lastName');
-      const spy_datatype_number = vi
-        .spyOn(faker.datatype, 'number')
-        .mockReturnValue(0);
-
-      const name = faker.company.companyName();
-      const parts = name.split(' ');
-
-      expect(parts.length).greaterThanOrEqual(2);
-      expect(spy_name_lastName).toHaveBeenCalledOnce();
-      expect(spy_company_companySuffix).toHaveBeenCalledOnce();
-
-      spy_datatype_number.mockRestore();
-      spy_name_lastName.mockRestore();
-      spy_company_companySuffix.mockRestore();
+  seededTests(faker, 'company', (t) => {
+    t.itEach(
+      'suffixes',
+      'companySuffix',
+      'catchPhrase',
+      'bs',
+      'catchPhraseAdjective',
+      'catchPhraseDescriptor',
+      'catchPhraseNoun',
+      'bsAdjective',
+      'bsBuzz',
+      'bsNoun'
+    );
+    t.describeEach(
+      'companyName',
+      'name'
+    )((t) => {
+      t.it('noArgs').it('with index');
     });
   });
 
-  describe('companySuffix()', () => {
-    it('returns random value from company.suffixes array', () => {
-      const suffix = faker.company.companySuffix();
-      expect(faker.company.suffixes()).toContain(suffix);
-    });
-  });
+  describe(`random seeded tests for seed ${faker.seed()}`, () => {
+    for (let i = 1; i <= NON_SEEDED_BASED_RUN; i++) {
+      describe('suffixes()', () => {
+        it('should return all suffixes', () => {
+          const actual = faker.company.suffixes();
 
-  describe('catchPhrase()', () => {
-    it('returns phrase comprising of a catch phrase adjective, descriptor, and noun', () => {
-      const spy_random_arrayElement = vi.spyOn(faker.random, 'arrayElement');
-      const spy_company_catchPhraseAdjective = vi.spyOn(
-        faker.company,
-        'catchPhraseAdjective'
-      );
-      const spy_company_catchPhraseDescriptor = vi.spyOn(
-        faker.company,
-        'catchPhraseDescriptor'
-      );
-      const spy_company_catchPhraseNoun = vi.spyOn(
-        faker.company,
-        'catchPhraseNoun'
-      );
+          expect(actual).toBeTruthy();
+          expect(faker.definitions.company.suffix).toEqual(actual);
+        });
+      });
 
-      const phrase = faker.company.catchPhrase();
+      describe('name()', () => {
+        it('should return a random company name', () => {
+          const actual = faker.company.name();
 
-      expect(phrase.split(' ').length).greaterThanOrEqual(3);
-      expect(spy_random_arrayElement).toHaveBeenCalledTimes(3);
-      expect(spy_company_catchPhraseAdjective).toHaveBeenCalledOnce();
-      expect(spy_company_catchPhraseDescriptor).toHaveBeenCalledOnce();
-      expect(spy_company_catchPhraseNoun).toHaveBeenCalledOnce();
+          expect(actual).toBeTruthy();
+          expect(actual).toBeTypeOf('string');
+        });
 
-      spy_random_arrayElement.mockRestore();
-      spy_company_catchPhraseAdjective.mockRestore();
-      spy_company_catchPhraseDescriptor.mockRestore();
-      spy_company_catchPhraseNoun.mockRestore();
-    });
-  });
+        it('should return a random company name with format 0', () => {
+          const actual = faker.company.name(0);
 
-  describe('bs()', () => {
-    it('returns phrase comprising of a BS buzz, adjective, and noun', () => {
-      const spy_random_arrayElement = vi.spyOn(faker.random, 'arrayElement');
-      const spy_company_bsBuzz = vi.spyOn(faker.company, 'bsBuzz');
-      const spy_company_bsAdjective = vi.spyOn(faker.company, 'bsAdjective');
-      const spy_company_bsNoun = vi.spyOn(faker.company, 'bsNoun');
+          expect(actual).toBeTruthy();
+          expect(actual).toBeTypeOf('string');
+          expect(actual).includes(' ');
+        });
 
-      const bs = faker.company.bs();
+        it('should return a random company name with format 1', () => {
+          const actual = faker.company.name(1);
 
-      expect(typeof bs).toBe('string');
-      expect(spy_random_arrayElement).toHaveBeenCalledTimes(3);
-      expect(spy_company_bsBuzz).toHaveBeenCalledOnce();
-      expect(spy_company_bsAdjective).toHaveBeenCalledOnce();
-      expect(spy_company_bsNoun).toHaveBeenCalledOnce();
+          expect(actual).toBeTruthy();
+          expect(actual).toBeTypeOf('string');
+          expect(actual).includes(' - ');
+        });
 
-      spy_random_arrayElement.mockRestore();
-      spy_company_bsBuzz.mockRestore();
-      spy_company_bsAdjective.mockRestore();
-      spy_company_bsNoun.mockRestore();
-    });
+        it('should return a random company name with format 2', () => {
+          const actual = faker.company.name(2);
+
+          expect(actual).toBeTruthy();
+          expect(actual).toBeTypeOf('string');
+          expect(actual).includes(', ');
+          expect(actual).includes(' and ');
+        });
+      });
+
+      describe('companyName()', () => {
+        it('should return a random company name', () => {
+          const actual = faker.company.companyName();
+
+          expect(actual).toBeTruthy();
+          expect(actual).toBeTypeOf('string');
+        });
+
+        it('should return a random company name with format 0', () => {
+          const actual = faker.company.companyName(0);
+
+          expect(actual).toBeTruthy();
+          expect(actual).toBeTypeOf('string');
+          expect(actual).includes(' ');
+        });
+
+        it('should return a random company name with format 1', () => {
+          const actual = faker.company.companyName(1);
+
+          expect(actual).toBeTruthy();
+          expect(actual).toBeTypeOf('string');
+          expect(actual).includes(' - ');
+        });
+
+        it('should return a random company name with format 2', () => {
+          const actual = faker.company.companyName(2);
+
+          expect(actual).toBeTruthy();
+          expect(actual).toBeTypeOf('string');
+          expect(actual).includes(', ');
+          expect(actual).includes(' and ');
+        });
+      });
+
+      describe('companySuffix()', () => {
+        it('should return random value from company.suffixes array', () => {
+          const actual = faker.company.companySuffix();
+
+          expect(actual).toBeTruthy();
+          expect(actual).toBeTypeOf('string');
+          expect(faker.definitions.company.suffix).toContain(actual);
+        });
+      });
+
+      describe('catchPhrase()', () => {
+        it('should return phrase comprising of a catch phrase adjective, descriptor, and noun', () => {
+          const actual = faker.company.catchPhrase();
+
+          expect(actual).toBeTruthy();
+          expect(actual).toBeTypeOf('string');
+
+          const parts = actual.split(' ');
+
+          expect(parts.length).toBeGreaterThanOrEqual(3);
+        });
+      });
+
+      describe('bs()', () => {
+        it('should return phrase comprising of a BS buzz, adjective, and noun', () => {
+          const actual = faker.company.bs();
+
+          expect(actual).toBeTruthy();
+          expect(actual).toBeTypeOf('string');
+
+          const parts = actual.split(' ');
+
+          expect(parts.length).toBeGreaterThanOrEqual(3);
+        });
+      });
+
+      describe('catchPhraseAdjective()', () => {
+        it('should return random value from adjective array', () => {
+          const actual = faker.company.catchPhraseAdjective();
+
+          expect(actual).toBeTruthy();
+          expect(actual).toBeTypeOf('string');
+          expect(faker.definitions.company.adjective).toContain(actual);
+        });
+      });
+
+      describe('catchPhraseDescriptor()', () => {
+        it('should return random value from descriptor array', () => {
+          const actual = faker.company.catchPhraseDescriptor();
+
+          expect(actual).toBeTruthy();
+          expect(actual).toBeTypeOf('string');
+          expect(faker.definitions.company.descriptor).toContain(actual);
+        });
+      });
+
+      describe('catchPhraseNoun()', () => {
+        it('should return random value from noun array', () => {
+          const actual = faker.company.catchPhraseNoun();
+
+          expect(actual).toBeTruthy();
+          expect(actual).toBeTypeOf('string');
+          expect(faker.definitions.company.noun).toContain(actual);
+        });
+      });
+
+      describe('bsAdjective()', () => {
+        it('should return random value from bs_adjective array', () => {
+          const actual = faker.company.bsAdjective();
+
+          expect(actual).toBeTruthy();
+          expect(actual).toBeTypeOf('string');
+          expect(faker.definitions.company.bs_adjective).toContain(actual);
+        });
+      });
+
+      describe('bsBuzz()', () => {
+        it('should return random value from bs_verb array', () => {
+          const actual = faker.company.bsBuzz();
+
+          expect(actual).toBeTruthy();
+          expect(actual).toBeTypeOf('string');
+          expect(faker.definitions.company.bs_verb).toContain(actual);
+        });
+      });
+
+      describe('bsNoun()', () => {
+        it('should return random value from bs_noun array', () => {
+          const actual = faker.company.bsNoun();
+
+          expect(actual).toBeTruthy();
+          expect(actual).toBeTypeOf('string');
+          expect(faker.definitions.company.bs_noun).toContain(actual);
+        });
+      });
+    }
   });
 });

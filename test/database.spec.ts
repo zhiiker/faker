@@ -1,82 +1,62 @@
-import { describe, expect, it, vi } from 'vitest';
-import { faker } from '../dist/cjs';
+import { afterEach, describe, expect, it } from 'vitest';
+import { faker } from '../src';
+import { seededTests } from './support/seededRuns';
+
+const NON_SEEDED_BASED_RUN = 5;
 
 describe('database', () => {
-  describe('column()', () => {
-    it('returns a column name', () => {
-      const spy_database_column = vi
-        .spyOn(faker.database, 'column')
-        .mockReturnValue('title');
-
-      const column = faker.database.column();
-      const expected = 'title';
-
-      expect(
-        column,
-        'The column name should be equals ' +
-          expected +
-          '. Current is ' +
-          column
-      ).toBe(expected);
-
-      spy_database_column.mockRestore();
-    });
+  afterEach(() => {
+    faker.locale = 'en';
   });
 
-  describe('collation()', () => {
-    it('returns a collation', () => {
-      const spy_database_collation = vi
-        .spyOn(faker.database, 'collation')
-        .mockReturnValue('utf8_bin');
-
-      const collation = faker.database.collation();
-      const expected = 'utf8_bin';
-
-      expect(
-        collation,
-        'The collation should be equals ' +
-          expected +
-          '. Current is ' +
-          collation
-      ).toBe(expected);
-
-      spy_database_collation.mockRestore();
-    });
+  seededTests(faker, 'database', (t) => {
+    t.itEach('column', 'type', 'collation', 'engine', 'mongodbObjectId');
   });
 
-  describe('engine()', () => {
-    it('returns an engine', () => {
-      const spy_database_engine = vi
-        .spyOn(faker.database, 'engine')
-        .mockReturnValue('InnoDB');
+  describe(`random seeded tests for seed ${faker.seed()}`, () => {
+    for (let i = 1; i <= NON_SEEDED_BASED_RUN; i++) {
+      describe('column()', () => {
+        it('should return a column name from array', () => {
+          const column = faker.database.column();
+          expect(column).toBeTruthy();
+          expect(column).toBeTypeOf('string');
+          expect(faker.definitions.database.column).toContain(column);
+        });
+      });
 
-      const engine = faker.database.engine();
-      const expected = 'InnoDB';
+      describe('collation()', () => {
+        it('should return a collation from array', () => {
+          const collation = faker.database.collation();
+          expect(collation).toBeTruthy();
+          expect(collation).toBeTypeOf('string');
+          expect(faker.definitions.database.collation).toContain(collation);
+        });
+      });
 
-      expect(
-        engine,
-        'The db engine should be equals ' + expected + '. Current is ' + engine
-      ).toBe(expected);
+      describe('engine()', () => {
+        it('should return an engine from array', () => {
+          const engine = faker.database.engine();
+          expect(engine).toBeTruthy();
+          expect(engine).toBeTypeOf('string');
+          expect(faker.definitions.database.engine).toContain(engine);
+        });
+      });
 
-      spy_database_engine.mockRestore();
-    });
-  });
+      describe('type()', () => {
+        it('should return a column type from array', () => {
+          const type = faker.database.type();
+          expect(type).toBeTruthy();
+          expect(type).toBeTypeOf('string');
+          expect(faker.definitions.database.type).toContain(type);
+        });
+      });
 
-  describe('type()', () => {
-    it('returns a column type', () => {
-      const spy_database_type = vi
-        .spyOn(faker.database, 'type')
-        .mockReturnValue('int');
-
-      const type = faker.database.type();
-      const expected = 'int';
-
-      expect(
-        type,
-        'The column type should be equals ' + expected + '. Current is ' + type
-      ).toBe(expected);
-
-      spy_database_type.mockRestore();
-    });
+      describe('mongodbObjectId', () => {
+        it('should generate a MongoDB ObjectId value', () => {
+          const generateObjectId = faker.database.mongodbObjectId();
+          expect(generateObjectId).toBeTypeOf('string');
+        });
+      });
+    }
   });
 });
